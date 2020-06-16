@@ -7,18 +7,21 @@ import numpy as np
 import pandas as pd
 import time
 
+# Reference
+# https://wrds-www.wharton.upenn.edu/documents/774/Daily_TAQ_Client_Spec_v2.2a.pdf
+
 # helper routing to log a message with time
-def log_msg( label_string ):
+def log_message( label_string ):
     ts = time.time()
     st = datetime.datetime.fromtimestamp( ts ).strftime( '%Y-%m-%d %H:%M:%S:%f' )
-    print( label_string + ' : ' + st )
+    print("{}: {}".format(st, label_string))
 
 # load and normalize trade file
 def loadtradefile(tickfilename):
-    log_msg( 'load trades' )
+    log_message( 'load trades' )
     trades = pd.read_csv(tickfilename, infer_datetime_format=True)
-    log_msg( 'load complete' )
-    log_msg( 'indexing trades' )
+    log_message( 'load complete' )
+    log_message( 'indexing trades' )
     format = '%Y%m%d%H:%M:%S.%f'
 
     # fix padding on time
@@ -27,7 +30,7 @@ def loadtradefile(tickfilename):
     times = pd.to_datetime( timestamps, format = format )
     trades.index = times
     trades = trades.drop(columns=['DATE', 'TIME_M'])
-    log_msg( "index trades done" )
+    log_message( "index trades done" )
     
     # standardize column names
     trades.columns = ['symbol', 'suffix', 'trade_size', 'trade_px']
@@ -37,10 +40,10 @@ def loadtradefile(tickfilename):
 
 # load and normalize file
 def loadquotefile(tickfilename):   
-    log_msg( 'load quotes' )
+    log_message( 'load quotes' )
     quotes = pd.read_csv(tickfilename, infer_datetime_format=True)
-    log_msg( 'load complete' )
-    log_msg( 'indexing quotes' )
+    log_message( 'load complete' )
+    log_message( 'indexing quotes' )
     format = '%Y%m%d%H:%M:%S.%f'
 
     # fix padding on time
@@ -49,10 +52,11 @@ def loadquotefile(tickfilename):
     times = pd.to_datetime( timestamps, format = format )
     quotes.index = times
     quotes = quotes.drop(columns=['DATE', 'TIME_M'])
-    log_msg( "index quotes done" )
+    log_message( "index quotes done" )
     
     # standardize column names
-    quotes.columns = ['exch', 'bid_px', 'bid_size', 'ask_px', 'ask_size', 'symbol', 'suffix']
+    quotes.columns = ['exch', 'bid_px', 'bid_size', 'ask_px', 'ask_size', 'qu_cond', 'qu_seqnum', 'natbbo_ind', 
+                      'qu_cancel', 'qu_source', 'symbol', 'suffix']
     
     # return a dataframe
     return quotes
@@ -60,9 +64,9 @@ def loadquotefile(tickfilename):
 # make a merged file for simulation
 # NOTE this currently doesn't support tickers with suffixes...
 def makeTAQfile(trades, quotes):
-    log_msg( 'start merge' )
+    log_message( 'start merge' )
     taq = quotes.merge( trades, how = 'outer', on = 'symbol', left_index = True, right_index = True )
-    log_msg( 'end merge' )
+    log_message( 'end merge' )
     return taq
     
 # TODO: calculate some stats on tick data
